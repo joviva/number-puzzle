@@ -1,0 +1,210 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Number Puzzle</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      .game-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        text-align: center;
+        border: 5px solid transparent;
+        transition: border-color 0.5s ease;
+        width: 90%;
+        max-width: 500px;
+      }
+      .solved {
+        border-color: #4caf50 !important;
+        box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+      }
+      h1 {
+        color: #333;
+        font-size: 1.8rem;
+      }
+      .puzzle-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(60px, 100px));
+        grid-gap: 5px;
+        margin: 20px auto;
+        justify-content: center;
+      }
+      .puzzle-piece {
+        width: 100%;
+        aspect-ratio: 1/1;
+        background-color: #9b08a0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .puzzle-piece:hover {
+        background-color: #85073c;
+      }
+      .empty {
+        background-color: #f0f0f0;
+      }
+      #moves {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+      .buttons-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      #reset-btn,
+      #next-level-btn {
+        margin: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #008cba;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      #reset-btn:hover,
+      #next-level-btn:hover {
+        background-color: #007b9a;
+      }
+      #next-level-btn {
+        background-color: #4caf50;
+        display: none;
+      }
+      #next-level-btn:hover {
+        background-color: #45a049;
+      }
+
+      /* Media Queries for Responsiveness */
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.5rem;
+        }
+        .puzzle-grid {
+          grid-template-columns: repeat(3, minmax(50px, 80px));
+        }
+        .puzzle-piece {
+          font-size: 20px;
+        }
+        .game-container {
+          padding: 15px;
+        }
+      }
+
+      @media (max-width: 350px) {
+        .puzzle-grid {
+          grid-template-columns: repeat(3, minmax(40px, 60px));
+        }
+        .puzzle-piece {
+          font-size: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container" id="game-container">
+      <h1>Number Puzzle</h1>
+      <p>Rearrange the tiles to solve the puzzle!</p>
+      <div class="puzzle-grid" id="puzzle-grid"></div>
+      <div id="moves">Moves: 0</div>
+      <div class="buttons-container">
+        <button id="reset-btn">Reset Puzzle</button>
+        <button id="next-level-btn">Go to Level 2</button>
+      </div>
+    </div>
+
+    <script>
+      const puzzleGrid = document.getElementById("puzzle-grid");
+      const movesDisplay = document.getElementById("moves");
+      const resetBtn = document.getElementById("reset-btn");
+      const nextLevelBtn = document.getElementById("next-level-btn");
+      const gameContainer = document.getElementById("game-container");
+      let moves = 0;
+      let tiles = [];
+
+      function createPuzzle() {
+        tiles = Array.from({ length: 8 }, (_, i) => i + 1);
+        tiles.push(null);
+        shuffleTiles();
+        renderPuzzle();
+      }
+
+      function shuffleTiles() {
+        for (let i = tiles.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+        }
+      }
+
+      function renderPuzzle() {
+        puzzleGrid.innerHTML = "";
+        tiles.forEach((tile, index) => {
+          const tileElement = document.createElement("div");
+          tileElement.classList.add("puzzle-piece");
+          if (tile === null) {
+            tileElement.classList.add("empty");
+          } else {
+            tileElement.textContent = tile;
+            tileElement.addEventListener("click", () => moveTile(index));
+          }
+          puzzleGrid.appendChild(tileElement);
+        });
+      }
+
+      function moveTile(index) {
+        const emptyIndex = tiles.indexOf(null);
+        if (isAdjacent(index, emptyIndex)) {
+          [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
+          moves++;
+          movesDisplay.textContent = `Moves: ${moves}`;
+          renderPuzzle();
+          if (isSolved()) {
+            gameContainer.classList.add("solved");
+            nextLevelBtn.style.display = "inline-block";
+          }
+        }
+      }
+
+      function isAdjacent(index1, index2) {
+        const row1 = Math.floor(index1 / 3);
+        const col1 = index1 % 3;
+        const row2 = Math.floor(index2 / 3);
+        const col2 = index2 % 3;
+        return Math.abs(row1 - row2) + Math.abs(col1 - col2) === 1;
+      }
+
+      function isSolved() {
+        return tiles.slice(0, -1).every((tile, index) => tile === index + 1);
+      }
+
+      resetBtn.addEventListener("click", () => {
+        moves = 0;
+        movesDisplay.textContent = "Moves: 0";
+        nextLevelBtn.style.display = "none";
+        gameContainer.classList.remove("solved");
+        createPuzzle();
+      });
+
+      nextLevelBtn.addEventListener("click", () => {
+        window.location.href = "level2.html";
+      });
+
+      createPuzzle();
+    </script>
+  </body>
+</html>
